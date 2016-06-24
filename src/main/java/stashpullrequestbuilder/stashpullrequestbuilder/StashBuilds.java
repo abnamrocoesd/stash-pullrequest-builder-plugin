@@ -68,8 +68,11 @@ public class StashBuilds {
             }
         }
         String duration = build.getDurationString();
-        repository.postFinishedComment(cause.getPullRequestId(), cause.getSourceCommitHash(),
-                cause.getDestinationCommitHash(), result, buildUrl,
-                build.getNumber(), additionalComment, duration);
+
+        if (trigger.isReportBuildStatus()) {
+            repository.postFinishedComment(cause.getPullRequestId(), cause.getSourceCommitHash(),
+                    cause.getDestinationCommitHash(), result, buildUrl,
+                    build.getNumber(), additionalComment, duration);
+        }
     }
 }

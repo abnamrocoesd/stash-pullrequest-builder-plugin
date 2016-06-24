@@ -147,7 +147,12 @@ public class StashRepository {
                 if (trigger.getDeletePreviousBuildFinishComments()) {
                     deletePreviousBuildFinishedComments(pullRequest);
                 }
-            String commentId = postBuildStartCommentTo(pullRequest);
+
+            String commentId = "";
+            if (trigger.isReportBuildStatus()) {
+                commentId = postBuildStartCommentTo(pullRequest);
+            }
+
             StashCause cause = new StashCause(
                     trigger.getStashHost(),
                     pullRequest.getFromRef().getBranch().getName(),

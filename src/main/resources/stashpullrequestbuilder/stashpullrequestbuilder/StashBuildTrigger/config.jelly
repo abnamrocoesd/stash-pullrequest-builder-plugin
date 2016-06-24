@@ -2,10 +2,10 @@
   <f:entry title="Cron" field="cron">
     <f:textbox />
   </f:entry>
-  <f:entry title="Stash Host" field="stashHost">
+  <f:entry title="Server Host" field="stashHost">
       <f:textbox />
   </f:entry>
-  <f:entry title="Stash Credentials" field="credentialsId">
+  <f:entry title="Server Credentials" field="credentialsId">
     <c:select />
   </f:entry>
   <f:entry title="Project" field="projectCode">
@@ -13,6 +13,12 @@
   </f:entry>
   <f:entry title="Repository Name" field="repositoryName">
     <f:textbox />
+  </f:entry>
+  <f:entry title="Report build started to server" field="reportBuildStarted">
+    <f:checkbox default="false"/>
+  </f:entry>
+  <f:entry title="Report build status to server" field="reportBuildStatus">
+    <f:checkbox default="false"/>
   </f:entry>
   <f:advanced>
     <f:entry title="Ignore ssl certificates" field="ignoreSsl">

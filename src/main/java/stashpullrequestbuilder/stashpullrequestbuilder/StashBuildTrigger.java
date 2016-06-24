@@ -49,6 +49,9 @@ public class StashBuildTrigger extends Trigger<AbstractProject<?, ?>> {
     private final boolean onlyBuildOnComment;
     private final boolean deletePreviousBuildFinishComments;
 
+    private final boolean reportBuildStarted;
+    private final boolean reportBuildStatus;
+
     transient private StashPullRequestsBuilder stashPullRequestsBuilder;
 
     @Extension
@@ -70,7 +73,9 @@ public class StashBuildTrigger extends Trigger<AbstractProject<?, ?>> {
             boolean onlyBuildOnComment,
             String ciBuildPhrases,
             boolean deletePreviousBuildFinishComments,
-            String targetBranchesToBuild
+            String targetBranchesToBuild,
+            boolean reportBuildStarted,
+            boolean reportBuildStatus
             ) throws ANTLRException {
         super(cron);
         this.projectPath = projectPath;
@@ -88,6 +93,8 @@ public class StashBuildTrigger extends Trigger<AbstractProject<?, ?>> {
         this.onlyBuildOnComment = onlyBuildOnComment;
         this.deletePreviousBuildFinishComments = deletePreviousBuildFinishComments;
         this.targetBranchesToBuild = targetBranchesToBuild;
+        this.reportBuildStarted = reportBuildStarted;
+        this.reportBuildStatus = reportBuildStatus;
     }
 
     public String getStashHost() {
@@ -152,6 +159,14 @@ public class StashBuildTrigger extends Trigger<AbstractProject<?, ?>> {
 
     public String getTargetBranchesToBuild() {
         return targetBranchesToBuild;
+    }
+
+    public boolean isReportBuildStarted() {
+        return reportBuildStarted;
+    }
+
+    public boolean isReportBuildStatus() {
+        return reportBuildStatus;
     }
 
     @Override
