@@ -2,6 +2,7 @@ package stashpullrequestbuilder.stashpullrequestbuilder;
 
 import static java.lang.String.format;
 
+import stashpullrequestbuilder.stashpullrequestbuilder.stash.StashPullRequestBuildHistory;
 import stashpullrequestbuilder.stashpullrequestbuilder.stash.StashPullRequestResponseValue;
 import hudson.model.AbstractProject;
 
@@ -12,7 +13,7 @@ import java.util.logging.Logger;
  * Created by Nathan McCarthy
  */
 public class StashPullRequestsBuilder {
-    private static final Logger logger = Logger.getLogger(StashBuildTrigger.class.getName());
+    private static final Logger logger = Logger.getLogger(StashPullRequestsBuilder.class.getName());
     private AbstractProject<?, ?> project;
     private StashBuildTrigger trigger;
     private StashRepository repository;
@@ -33,11 +34,11 @@ public class StashPullRequestsBuilder {
         this.repository.addFutureBuildTasks(targetPullRequests);
     }
 
-    public StashPullRequestsBuilder setupBuilder() {
+    public StashPullRequestsBuilder setupBuilder(StashPullRequestBuildHistory buildHistory) {
         if (this.project == null || this.trigger == null) {
             throw new IllegalStateException();
         }
-        this.repository = new StashRepository(this.trigger.getProjectPath(), this);
+        this.repository = new StashRepository(this.trigger.getProjectPath(), this, buildHistory);
         this.builds = new StashBuilds(this.trigger, this.repository);
         return this;
     }

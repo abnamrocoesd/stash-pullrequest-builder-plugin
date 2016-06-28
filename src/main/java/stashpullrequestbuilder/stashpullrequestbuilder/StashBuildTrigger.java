@@ -21,6 +21,7 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+import stashpullrequestbuilder.stashpullrequestbuilder.stash.StashPullRequestBuildHistory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -51,6 +52,8 @@ public class StashBuildTrigger extends Trigger<AbstractProject<?, ?>> {
 
     private final boolean reportBuildStarted;
     private final boolean reportBuildStatus;
+
+    public static final StashPullRequestBuildHistory buildHistory = new StashPullRequestBuildHistory();
 
     transient private StashPullRequestsBuilder stashPullRequestsBuilder;
 
@@ -175,7 +178,7 @@ public class StashBuildTrigger extends Trigger<AbstractProject<?, ?>> {
             this.stashPullRequestsBuilder = StashPullRequestsBuilder.getBuilder();
             this.stashPullRequestsBuilder.setProject(project);
             this.stashPullRequestsBuilder.setTrigger(this);
-            this.stashPullRequestsBuilder.setupBuilder();
+            this.stashPullRequestsBuilder.setupBuilder(buildHistory);
         } catch(IllegalStateException e) {
             logger.log(Level.SEVERE, "Can't start trigger", e);
             return;

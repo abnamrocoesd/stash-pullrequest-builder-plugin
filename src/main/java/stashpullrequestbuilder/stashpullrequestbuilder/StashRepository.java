@@ -4,11 +4,7 @@ import static java.lang.String.format;
 
 import hudson.model.Result;
 
-import stashpullrequestbuilder.stashpullrequestbuilder.stash.StashApiClient;
-import stashpullrequestbuilder.stashpullrequestbuilder.stash.StashPullRequestComment;
-import stashpullrequestbuilder.stashpullrequestbuilder.stash.StashPullRequestMergableResponse;
-import stashpullrequestbuilder.stashpullrequestbuilder.stash.StashPullRequestResponseValue;
-import stashpullrequestbuilder.stashpullrequestbuilder.stash.StashPullRequestResponseValueRepository;
+import stashpullrequestbuilder.stashpullrequestbuilder.stash.*;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -45,14 +41,17 @@ public class StashRepository {
     public static final String ADDITIONAL_PARAMETER_REGEX = "^p:(([A-Za-z_0-9])+)=(.*)";
     public static final Pattern ADDITIONAL_PARAMETER_REGEX_PATTERN = Pattern.compile(ADDITIONAL_PARAMETER_REGEX);
 
+    private final StashPullRequestBuildHistory buildHistory;
+
     private String projectPath;
     private StashPullRequestsBuilder builder;
     private StashBuildTrigger trigger;
     private StashApiClient client;
 
-    public StashRepository(String projectPath, StashPullRequestsBuilder builder) {
+    public StashRepository(String projectPath, StashPullRequestsBuilder builder, StashPullRequestBuildHistory buildHistory) {
         this.projectPath = projectPath;
         this.builder = builder;
+        this.buildHistory = buildHistory;
     }
 
     public void init() {
@@ -121,7 +120,6 @@ public class StashRepository {
         List<StashPullRequestComment> comments = client.getPullRequestComments(owner, repositoryName, id);
         if (comments != null) {
             Collections.sort(comments);
-//          Collections.reverse(comments);
 
             Map<String, String> result = new TreeMap<String, String>();
             
@@ -244,6 +242,7 @@ public class StashRepository {
     private boolean isBuildTarget(StashPullRequestResponseValue pullRequest) {
 
         boolean shouldBuild = true;
+        boolean newBuild = false;
 
         if (pullRequest.getState() != null && pullRequest.getState().equals("OPEN")) {
             if (isSkipBuild(pullRequest.getTitle())) {
@@ -265,6 +264,9 @@ public class StashRepository {
                 shouldBuild = false;
             }
 
+            boolean mergeHasBeenBuilt;
+            boolean commentHasBeenBuilt = false;
+            Integer triggerCommentId = -1;
             String sourceCommit = pullRequest.getFromRef().getLatestCommit();
 
             StashPullRequestResponseValueRepository destination = pullRequest.getToRef();
@@ -274,6 +276,8 @@ public class StashRepository {
 
             String id = pullRequest.getId();
             List<StashPullRequestComment> comments = client.getPullRequestComments(owner, repositoryName, id);
+
+            mergeHasBeenBuilt = buildHistory.mergeHasBeenBuilt(sourceCommit, destinationCommit);
 
             if (comments != null) {
                 Collections.sort(comments);
@@ -319,15 +323,30 @@ public class StashRepository {
 
                     if (isPhrasesContain(content, this.trigger.getCiBuildPhrases())) {
                         shouldBuild = true;
+                        triggerCommentId = comment.getCommentId();
+                        commentHasBeenBuilt = buildHistory.commentHasBeenBuilt(triggerCommentId);
                         break;
                     }
                 }
             }
+            if((triggerCommentId != -1 && ! commentHasBeenBuilt) || ! mergeHasBeenBuilt) {
+                newBuild = true;
+                if(! mergeHasBeenBuilt) {
+                    buildHistory.saveMergeTrigger(sourceCommit, destinationCommit);
+                }
+                if(triggerCommentId != -1 && ! commentHasBeenBuilt) {
+                    buildHistory.saveCommentTrigger(triggerCommentId);
+                }
+            } else {
+                newBuild = false;
+            }
         }
+
         if (shouldBuild) {
             logger.info("Building PR: " + pullRequest.getId());
         }
-        return shouldBuild;
+
+        return shouldBuild && newBuild;
     }
 
     private boolean isForTargetBranch(StashPullRequestResponseValue pullRequest) {
